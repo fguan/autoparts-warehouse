@@ -1,6 +1,5 @@
--- Allen Jarrett and Frank Guan
 
--- Script for Final Project Database Design - Database Definition Language
+-- Database Definition Language
 -- Primary Keys and Unique contraints automatically become indexed
 
 drop trigger if exists salary_changes_trigger ON employeework_tbl;
