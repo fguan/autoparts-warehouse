@@ -1,7 +1,3 @@
--- Allen Jarrett and Frank Guan
-
--- Insert the sample data into the Final Project DATABASE
-
 -- DML statements
 -- Find all orders made after Jan 1, 2020
 select * from order_tbl where orderdate > '2020-01-01';
