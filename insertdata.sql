@@ -1,5 +1,3 @@
--- Insert the sample data into the Final Project DATABASE
-
 insert into customer_tbl values
 (100,'J','ATJ Enterprises','Allen','Jarrett','123 Main Street','Roseville','CA','95661','916-256-9874'),
 (110,'D','Freds Auto Parts','Fred','Smith','123 First Street','Roseville','CA','95678','916-541-4785'),

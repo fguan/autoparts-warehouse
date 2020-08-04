@@ -1,16 +1,22 @@
-
--- Database Definition Language
 -- Primary Keys and Unique contraints automatically become indexed
 
 drop trigger if exists salary_changes_trigger ON employeework_tbl;
+drop trigger if exists inventory_update_trigger ON orderproduct_tbl;
 drop function if exists salary_change() cascade;
 drop function if exists customer_order(int) cascade;
+drop function if exists products_from_order(int) cascade;
+drop function if exists inventory_change() cascade;
+drop function if exists placeOrder(int, varchar(9), int);
 drop view if exists employee_vew;
 drop view if exists ordershipper_vew;
 drop view if exists productvendor_vew;
 drop view if exists customerorder_vew;
 drop view if exists orderproduct_vew;
 drop view if exists customer_orders_vew;
+drop view if exists products_from_order_vew;
+drop view if exists recentOrders_vew;
+drop view if exists products_vew;
+drop view if exists customers_vew;
 drop table if exists orderproduct_tbl cascade;
 drop table if exists order_tbl cascade;
 drop table if exists inventory_tbl cascade;
@@ -139,7 +145,7 @@ create table salaryhistory_tbl(
 );
 
 -- VIEWS
--- Employee View of Sales Dept
+-- Employee View
 create or replace view employee_vew as
 select ep.empid, ep.ssn, ep.firstname, ep.lastname, ew.deptid, d.deptname, ew.hiredate, ew.salary 
 from employeework_tbl ew, employeepersonal_tbl ep, dept_tbl d
@@ -181,8 +187,30 @@ ORDER BY c.companyname asc, o.orderdate asc;
 -- Select * from customer_orders_vew WHERE "Order ID" = 601
 -- That is an example how to use the Custom Column Names.
 
+-- Displays the 2 most recent order numbers
+-- Use "select * from recentOrders_vew; to invoke the view
+create or replace view recentOrders_vew AS
+select orderId  AS "Most Recent 5 Order Numbers", customerID,orderdate
+from order_tbl
+order by orderid desc
+limit 5;
 
---------------------------------------------------- Functions -----------------------------------------------------
+create or replace view customers_vew AS
+select customerID, companyname from customer_tbl;
+
+create or replace view products_vew AS
+select p.productID, p.proddesc, i.quantity AS "Quantity on Hand"
+from product_tbl p, inventory_tbl i
+WHERE p.productID = i.productID;
+
+create or replace view products_from_order_vew AS
+select op.productid, p.proddesc, op.quantity
+	From orderproduct_tbl op, product_tbl p, order_tbl o
+	Where o.orderid = op.orderID AND p.productID = op.productID
+	AND o.orderid = 640;
+
+
+-------------------------------------- Functions ---------------------------
 --This function will document the salary change for any employee or when a new employee is added
 CREATE OR REPLACE FUNCTION salary_change()
 	RETURNS trigger AS
@@ -208,7 +236,7 @@ LANGUAGE PLPGSQL;
 -- To use the function at the command line use the following:
 -- select * from customer_order(100);
 CREATE OR REPLACE FUNCTION customer_order(custid int, OUT companyname text, OUT orderid int, OUT productid varchar(9), OUT quantity int)
-RETURNS SETOF record AS
+RETURNS SETOF record AS 
 $$
 SELECT c.companyname, o.orderid, op.productid, op.quantity
    FROM customer_tbl c, order_tbl o, orderproduct_tbl op
@@ -217,6 +245,17 @@ SELECT c.companyname, o.orderid, op.productid, op.quantity
    ORDER BY orderdate asc;
 $$
 LANGUAGE sql;
+
+--This function will display all the products ordered from a given order#
+create or replace function products_from_order(ordernum int, out productID varchar(9), out proddesc text, out quantity int)
+RETURNS SETOF record AS
+$$
+select op.productid, p.proddesc, op.quantity
+	From orderproduct_tbl op, product_tbl p, order_tbl o
+	Where o.orderid = op.orderID AND p.productID = op.productID
+	AND op.orderid = ordernum;
+$$
+LANGUAGE SQL;
 
 --This function will decrease the inventory of a product as it is ordered.
 CREATE OR REPLACE FUNCTION inventory_change()
@@ -231,13 +270,25 @@ END;
 $BODY$
 LANGUAGE PLPGSQL;
 
+-- To use to insert into to the orderproduct table.
+-- Use the following to invoke the function
+-- Select placeOrder(newID, ProductID, quantity);
+--  Example: select placeOrder(610,'DP-223,1);
+create or replace function placeOrder(ID int, ProdID varchar(9), quantity int) RETURNS VOID AS
+$$
+	insert into orderproduct_tbl 
+	values
+	(ID, ProdID, quantity)
+$$
+LANGUAGE SQL;
+
 ------------------------------------------------Triggers ---------------------------------------------------------
 --This trigger calls the salary_change() function.
 create trigger salary_changes_trigger
-	AFTER INSERT OR UPDATE
-	ON employeeWork_tbl
-	FOR EACH ROW
-	EXECUTE PROCEDURE salary_change();
+AFTER INSERT OR UPDATE
+ON employeeWork_tbl
+FOR EACH ROW
+EXECUTE PROCEDURE salary_change();
 	
 --This trigger calls the inventory_change() function when INSERTING an order.
 CREATE TRIGGER inventory_update_trigger

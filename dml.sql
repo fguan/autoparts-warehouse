@@ -1,3 +1,5 @@
+-- dml.sql
+
 -- DML statements
 -- Find all orders made after Jan 1, 2020
 select * from order_tbl where orderdate > '2020-01-01';
@@ -16,6 +18,17 @@ select firstname, lastname, phone from employeepersonal_tbl where firstname = 'M
 
 -- Find the retail price of a 4 pack of spark plugs
 select proddesc, retailprice from product_tbl where proddesc = 'Spark Plugs - 4 pack';
+
+-- Find the highest orderID from the order table
+select orderID AS "Highest OrderID Number" from order_tbl
+	ORDER By orderid DESC;
+	
+-- Find the most recent 2 order numbers
+select orderId  AS "Most Recent 2 Order Numbers", customerID,orderdate
+from order_tbl
+order by orderid desc
+limit 2;
+
 
 
 
