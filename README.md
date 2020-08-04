@@ -25,10 +25,10 @@ https://wiki.postgresql.org/wiki/Pgpass
 
 2.  In the .pgpass file, enter the following on the first line
 
-> localhost:5432:<database>:<username>:<password>
+> localhost:5432:`database`:`username`:`password`
 
 For example: 
-> localhost:5432:fguan:fguan:<password>
+> localhost:5432:fguan:fguan:`password`
 
 ---
 
